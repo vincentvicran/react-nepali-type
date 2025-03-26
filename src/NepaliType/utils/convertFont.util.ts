@@ -1,158 +1,228 @@
-import { FONT_MAPS_UNICODE_TO_ASCII } from "../maps"
-
-function normalizeUnicode(unicodetext: string): string {
-    let index = -1
-    let normalized = ""
-    while (index + 1 < unicodetext.length) {
-        index += 1
-        const character = unicodetext[index]
-        try {
-            try {
-                if (character !== "र") {
-                    // for aadha akshars
-                    if (
-                        unicodetext[index + 1] === "्" &&
-                        unicodetext[index + 2] !== " " &&
-                        unicodetext[index + 2] !== "।" &&
-                        unicodetext[index + 2] !== "," &&
-                        unicodetext[index + 2] !== "र"
-                    ) {
-                        if ("wertyuxasdghjkzvn".includes(FONT_MAPS_UNICODE_TO_ASCII[character])) {
-                            normalized += String.fromCharCode(FONT_MAPS_UNICODE_TO_ASCII[character].charCodeAt(0) - 32)
-                            index += 1
-                            continue
-                        } else if (character === "स") {
-                            normalized += ":"
-                            index += 1
-                            continue
-                        } else if (character === "ष") {
-                            normalized += "i"
-                            index += 1
-                            continue
-                        }
-                    }
-                }
-                if (unicodetext[index - 1] !== "र" && character === "्" && unicodetext[index + 1] === "र") {
-                    // for खुट्टा चिर्ने चिन्ह
-                    if (
-                        unicodetext[index - 1] !== "ट" &&
-                        unicodetext[index - 1] !== "ठ" &&
-                        unicodetext[index - 1] !== "ड"
-                    ) {
-                        normalized += "|" // for sign as in क्रम
-                        index += 1
-                        continue
-                    } else {
-                        normalized += "«" // for sign as in ट्रक
-                        index += 1
-                        continue
-                    }
-                }
-            } catch (err) {
-                // ignore index out of range error
-            }
-            normalized += character
-        } catch (err) {
-            normalized += character
-        }
-    }
-    normalized = normalized.replace("त|", "q") // for त्र
-    return normalized
+var utop = {
+    अ: "c",
+    आ: "cf",
+    "ा": "f",
+    इ: "O",
+    ई: "O{",
+    र्: "{",
+    उ: "p",
+    ए: "P",
+    "े": "]",
+    "ै": "}",
+    "ो": "f]",
+    "ौ": "f}",
+    ओ: "cf]",
+    औ: "cf}",
+    "ं": "+",
+    "ँ": "F",
+    "ि": "l",
+    "ी": "L",
+    "ु": "'",
+    "ू": '"',
+    क: "s",
+    ख: "v",
+    ग: "u",
+    घ: "3",
+    ङ: "ª",
+    च: "r",
+    छ: "5",
+    ज: "h",
+    झ: "´",
+    ञ: "`",
+    ट: "6",
+    ठ: "7",
+    ड: "8",
+    ढ: "9",
+    ण: "0f",
+    त: "t",
+    थ: "y",
+    द: "b",
+    ध: "w",
+    न: "g",
+    प: "k",
+    फ: "km",
+    ब: "a",
+    भ: "e",
+    म: "d",
+    य: "o",
+    र: "/",
+    रू: "?",
+    "ृ": "[",
+    ल: "n",
+    व: "j",
+    स: ";",
+    श: "z",
+    ष: "if",
+    ज्ञ: "1",
+    ह: "x",
+    "१": "!",
+    "२": "@",
+    "३": "#",
+    "४": "$",
+    "५": "%",
+    "६": "^",
+    "७": "&",
+    "८": "*",
+    "९": "(",
+    "०": ")",
+    "।": ".",
+    "्": "\\",
+    ऊ: "pm",
+    "-": " ",
+    "(": "-",
+    ")": "_",
 }
 
-export function convertUnicodeToASCIIPreeti(unicodestring: string): string {
-    const normalizedunicodetext = normalizeUnicode(unicodestring)
-    let converted = ""
-    let index = -1
-    while (index + 1 < normalizedunicodetext.length) {
-        index += 1
-        const character = normalizedunicodetext[index]
-        if (character === "\ufeff") continue
+function normalizeUnicode(unicodetext: string): string {
+    let normalized = ""
+
+    for (var i = 0; i < unicodetext.length; i++) {
+        let currentChar = unicodetext[i]
         try {
             try {
-                if (normalizedunicodetext[index + 1] === "ि") {
-                    // for normal hraswo ukaar
-                    if (character === "q") {
-                        converted += "l" + character
-                    } else {
-                        converted += "l" + FONT_MAPS_UNICODE_TO_ASCII[character]
+                if (currentChar != "र") {
+                    if (
+                        unicodetext[i + 1] == "्" &&
+                        unicodetext[i + 2] != " " &&
+                        unicodetext[i + 2] != "।" &&
+                        unicodetext[i + 2] != ","
+                    ) {
+                        // debugger;
+                        if (unicodetext[i + 2] != "र") {
+                            if ("wertyuxasdghjkzvn".includes(utop[i as unknown as keyof typeof utop])) {
+                                normalized += String.fromCharCode(
+                                    parseInt(utop[i as unknown as keyof typeof utop]) - 32,
+                                )
+                                i++
+                                continue
+                            } else if (currentChar == "स") {
+                                normalized += ":"
+                                i++
+                                continue
+                            } else if (currentChar == "ष") {
+                                normalized += "i"
+                                i++
+                                continue
+                            }
+                        }
                     }
-                    index += 1
+                }
+                if (unicodetext[i - 1] != "र" && currentChar == "्" && unicodetext[i + 1] == "र") {
+                    if (unicodetext[i - 1] != "ट" && unicodetext[i - 1] != "ठ" && unicodetext[i - 1] != "ड") {
+                        normalized += "|"
+                        i++
+                        continue
+                    } else {
+                        normalized += "«"
+                        i++
+                        continue
+                    }
+                }
+            } catch (err) {}
+            normalized += currentChar
+        } catch (err) {
+            normalized += currentChar
+        }
+    } //for unicodetext loop
+    return normalized.replace("त|", "q")
+}
+export function convertUnicodeToASCIIPreeti(text: string) {
+    let normalizedUnicodeText = normalizeUnicode(text)
+    let converted = ""
+    for (var i = 0; i < normalizedUnicodeText.length; i++) {
+        var currentChar = normalizedUnicodeText[i]
+        if (currentChar == "\ufeff") continue
+        try {
+            try {
+                if (normalizedUnicodeText[i + 1] == "ि") {
+                    if (currentChar == "q") converted += "l" + currentChar
+                    else {
+                        if (utop[currentChar as keyof typeof utop]) {
+                            converted += "l" + utop[currentChar as keyof typeof utop]
+                        } else {
+                            converted += "l" + currentChar
+                        }
+                    }
+                    i++
                     continue
                 }
-
-                if (normalizedunicodetext[index + 2] === "ि") {
-                    // for constructs like त्ति
-                    if ("WERTYUXASDGHJK:ZVN".includes(normalizedunicodetext[index + 1])) {
-                        if (normalizedunicodetext[index + 1] !== "q") {
-                            // if not like न्त्रि
-                            converted += "l" + character + FONT_MAPS_UNICODE_TO_ASCII[normalizedunicodetext[index + 1]]
-                            index += 2
+                if (normalizedUnicodeText[i + 2] == "ि") {
+                    //yasma tyo value ho haina sure xaina hai currentChar to string value huna sakxa
+                    if ("WERTYUXASDGHJK:ZVN".includes(currentChar)) {
+                        if (normalizedUnicodeText[i + 1] != "q") {
+                            converted += "l" + currentChar + utop[normalizedUnicodeText[i + 1] as keyof typeof utop]
+                            i = i + 2
                             continue
-                        } else {
-                            converted += "l" + character + normalizedunicodetext[index + 1]
-                            index += 2
+                        } else if (normalizedUnicodeText[i + 1] == "q") {
+                            converted += "l" + currentChar + normalizedUnicodeText[i + 1]
+                            i = i + 2
                             continue
                         }
                     }
                 }
-
-                if (normalizedunicodetext[index + 1] === "्" && character === "र") {
-                    // for reph as in वार्ता
-                    if ("आोैेैी".includes(normalizedunicodetext[index + 3])) {
+                if (normalizedUnicodeText[i + 1] == "्" && currentChar == "र") {
+                    if (
+                        normalizedUnicodeText[i + 3] == "ा" ||
+                        normalizedUnicodeText[i + 3] == "ो" ||
+                        normalizedUnicodeText[i + 3] == "ौ" ||
+                        normalizedUnicodeText[i + 3] == "े" ||
+                        normalizedUnicodeText[i + 3] == "ै" ||
+                        normalizedUnicodeText[i + 3] == "ी"
+                    ) {
                         converted +=
-                            FONT_MAPS_UNICODE_TO_ASCII[normalizedunicodetext[index + 2]] +
-                            FONT_MAPS_UNICODE_TO_ASCII[normalizedunicodetext[index + 3]] +
+                            utop[normalizedUnicodeText[i + 2] as keyof typeof utop] +
+                            utop[normalizedUnicodeText[i + 3] as keyof typeof utop] +
                             "{"
-                        index += 3
+                        i += 3
+                        continue
+                    } else if (normalizedUnicodeText[i + 3] == "ि") {
+                        converted +=
+                            utop[normalizedUnicodeText[i + 3] as keyof typeof utop] +
+                            utop[normalizedUnicodeText[i + 2] as keyof typeof utop] +
+                            "{"
+                        i += 3
                         continue
                     }
-                    if (normalizedunicodetext[index + 3] === "ि") {
-                        converted +=
-                            FONT_MAPS_UNICODE_TO_ASCII[normalizedunicodetext[index + 3]] +
-                            FONT_MAPS_UNICODE_TO_ASCII[normalizedunicodetext[index + 2]] +
-                            "{"
-                        index += 3
-                        continue
-                    }
-                    converted += FONT_MAPS_UNICODE_TO_ASCII[normalizedunicodetext[index + 2]] + "{"
-                    index += 2
+                    converted += utop[normalizedUnicodeText[i + 2] as keyof typeof utop] + "{"
+                    i += 2
                     continue
                 }
-
-                if (normalizedunicodetext[index + 3] === "ि") {
-                    // for the likes of ष्ट्रिय
-                    if (["|", "«"].includes(normalizedunicodetext[index + 2])) {
-                        if ("WERTYUXASDGHJK:ZVNIi".includes(normalizedunicodetext[index + 1])) {
+                if (normalizedUnicodeText[i + 3] == "ि") {
+                    if (normalizedUnicodeText[i + 2] == "|" || normalizedUnicodeText[i + 2] == "«") {
+                        //yasma pani currentchar ko value of thyo so doubt
+                        if ("WERTYUXASDGHJK:ZVNIi".includes(currentChar)) {
                             converted +=
                                 "l" +
-                                character +
-                                FONT_MAPS_UNICODE_TO_ASCII[normalizedunicodetext[index + 1]] +
-                                normalizedunicodetext[index + 2]
-                            index += 3
+                                currentChar +
+                                utop[normalizedUnicodeText[i + 1] as keyof typeof utop] +
+                                normalizedUnicodeText[i + 2]
+                            i += 3
                             continue
                         }
                     }
                 }
-            } catch (err) {
-                // ignore index out of range error
-            }
-            converted += FONT_MAPS_UNICODE_TO_ASCII[character]
+            } catch (err) {}
+            converted += utop[currentChar as keyof typeof utop] || currentChar
         } catch (err) {
-            converted += character
+            converted += currentChar
         }
     }
+    let finalString = converted
+    finalString = finalString.replace("Si", "I")
+    finalString = finalString.replace("H`", "1")
+    finalString = finalString.replace("b\\\\w", "4")
+    finalString = finalString.replace("z|", ">")
+    finalString = finalString.replace("/'", "?")
+    finalString = finalString.replace('"', "¿")
+    finalString = finalString.replace("Tt", "Q")
+    finalString = finalString.replace("b\\\\lj", "lå")
+    finalString = finalString.replace("b\\\\\\j", "å")
+    finalString = finalString.replace("0f\\", "0")
+    finalString = finalString.replace("`\\", "~")
 
-    converted = converted.replace("Si", "I") // Si in preeti is aadha ka aadha ष
-    converted = converted.replace("H`", "1") // H` is the product of composite nature of unicode ज्ञ
-    converted = converted.replace("b\\w", "4") // b\w means in preeti द halanta ध
-    converted = converted.replace("z|", ">") // composite for श्र
-    converted = converted.replace("/'", "?") // composite for रु
-    converted = converted.replace('/"', "¿") // composite for रू
-    converted = converted.replace("Tt", "Q") // composite for त्त
-    converted = converted.replace("b\\lj", "lå") // composite for द्वि
-    converted = converted.replace("b\\j", "å") // composite for द्व
-    converted = converted.replace("0f\\", "0") // composite for ण् to get the aadha ण in say गण्डक
-    converted = converted.replace("`\\", "~") // composite for aadha ञ्
-    return converted
+    finalString = finalString.replace(new RegExp("(.)[l][|]", "g"), "l$1|")
+    finalString = finalString.replace(new RegExp("[k][l][m][|]", "g"), "lk|m")
+    finalString = finalString.replace(new RegExp("(.)(l|)$", "g"), "l$1|")
+
+    return finalString
 }

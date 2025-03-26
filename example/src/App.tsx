@@ -26,7 +26,8 @@ const App: FunctionComponent = () => {
                             <div className='col-md-6 mb-3'>
                                 <label htmlFor='start-date'>React Nepali Type Input:</label>
                                 <NepaliType
-                                    value={encodedValue.unicodeValue}
+                                    // value={encodedValue.unicodeValue}
+                                    value={"करन धिमीरे विक्रान्त"}
                                     onChange={(asciiValue, unicodeValue) =>
                                         setEncodedValue({
                                             asciiValue,
