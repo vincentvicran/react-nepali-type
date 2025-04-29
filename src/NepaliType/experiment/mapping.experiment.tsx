@@ -312,3 +312,231 @@ export const mapToAscii = (input: string, toFont: TFontKeys = "Preeti"): string 
 export const unicodeToPreeti = (input: string): string => {
     return mapToAscii(input, "Preeti")
 }
+
+/**
+ * devanagariToPreeti.ts
+ *
+ * A fairly complete example of converting Unicode Devanagari (Nepali) text
+ * into legacy Preeti ASCII encoding.
+ *
+ * NOTES:
+ *  - The "reorderShortI" handles the well-known issue with the 'ि' sign (U+093F).
+ *  - Additional reorder steps for other matras can be added as needed.
+ *  - The mapping dictionary is largely based on common Preeti references;
+ *    real-world usage or different keyboard layouts might require slight changes.
+ */
+
+////////////////////////////////////////
+// 1) HELPER FUNCTION: REORDER "ि"
+////////////////////////////////////////
+
+/**
+ * Reorders the "short i" (ि / U+093F) vowel sign so that
+ * in the final ASCII text, it appears *after* the consonant’s code.
+ *
+ * In Unicode, the stored sequence for "कि" is <क, ि>
+ * which is codepoints [U+0915, U+093F].
+ *
+ * Preeti expects ASCII code for क first, then the ASCII code for ि.
+ * But if we did a naive left-to-right replacement, the positions might invert.
+ *
+ * This function uses a regex that looks for:
+ *   (a Devanagari letter) followed by (U+093F)
+ * and rearranges it to:
+ *   (U+093F) first, then (the Devanagari letter).
+ *
+ * Later, we map U+093F → Preeti ASCII for 'ि'.
+ * Because we do the swap, the mapping will produce the right final order.
+ *
+ * Example: "किरण" (कि + रण)
+ *   => reorder 'क + ि' to 'ि + क'
+ *   => then the dictionary picks them off in the new order for correct mapping.
+ */
+function reorderShortI(input: string): string {
+    // This regex captures any Devanagari letter/block in [\u0900-\u097F]
+    // followed immediately by U+093F (the 'ि' sign)
+    // Then it swaps them: "\u093F$1"
+    return input.replace(/([\u0900-\u097F])\u093F/g, "\u093F$1")
+}
+
+////////////////////////////////////////
+// 2) MAPPING DICTIONARY
+////////////////////////////////////////
+
+/**
+ * This array defines a series of replacements from Devanagari Unicode
+ * to Preeti ASCII.
+ *
+ * IMPORTANT:
+ *   - Sometimes we have multi-character sequences (e.g., certain conjuncts),
+ *     so if needed, put the multi-character patterns BEFORE single characters
+ *     to avoid partial replacement conflicts.
+ *   - The codes used here are the most common references for Preeti.
+ *   - For some less common letters/symbols, you may need to modify or extend.
+ */
+
+// A convenient helper type
+interface ReplacementRule {
+    find: string // Devanagari string or codepoint(s)
+    replaceWith: string // The Preeti ASCII
+}
+
+const devToPreetiMap: ReplacementRule[] = [
+    //
+    // 2.1) Multi-character or special sequences (if any)
+    //     (In many references, “ज्ञ” is typed as "1" in Preeti, so we handle it as a single chunk)
+    { find: "ज्ञ", replaceWith: "1" },
+    // Other conjuncts or special forms can go here...
+
+    //
+    // 2.2) Basic Vowels
+    //
+    { find: "अ", replaceWith: "c" },
+    { find: "आ", replaceWith: "cf" },
+    { find: "इ", replaceWith: "O" },
+    { find: "ई", replaceWith: "O}" },
+    { find: "उ", replaceWith: "p" },
+    { find: "ऊ", replaceWith: "P" },
+    { find: "ए", replaceWith: "C" },
+    { find: "ऐ", replaceWith: "Cf" },
+    { find: "ओ", replaceWith: "lk" },
+    { find: "औ", replaceWith: "lo" },
+    { find: "ऋ", replaceWith: "}" },
+    // Add vocalic L (ऌ) etc. if needed
+
+    //
+    // 2.3) Consonants
+    //
+    { find: "क", replaceWith: "s" },
+    { find: "ख", replaceWith: "v" },
+    { find: "ग", replaceWith: "u" },
+    { find: "घ", replaceWith: "3" },
+    { find: "ङ", replaceWith: "ª" },
+
+    { find: "च", replaceWith: "r" },
+    { find: "छ", replaceWith: "5" },
+    { find: "ज", replaceWith: "h" },
+    { find: "झ", replaceWith: "`" },
+    { find: "ञ", replaceWith: "6«" }, // sometimes "6^" or variations
+
+    { find: "ट", replaceWith: "t" },
+    { find: "ठ", replaceWith: "T" },
+    { find: "ड", replaceWith: "[" },
+    { find: "ढ", replaceWith: "7" },
+    { find: "ण", replaceWith: "8" },
+
+    { find: "त", replaceWith: "w" },
+    { find: "थ", replaceWith: "g" },
+    { find: "द", replaceWith: "af" },
+    { find: "ध", replaceWith: "k" },
+    { find: "न", replaceWith: "a" },
+
+    { find: "प", replaceWith: "z" },
+    { find: "फ", replaceWith: "if" },
+    { find: "ब", replaceWith: "]" },
+    { find: "भ", replaceWith: "x" },
+    { find: "म", replaceWith: "?@" },
+
+    { find: "य", replaceWith: "¤" },
+    { find: "र", replaceWith: ">" },
+    { find: "ल", replaceWith: "b" },
+    { find: "व", replaceWith: "B" },
+    { find: "श", replaceWith: '"' },
+    { find: "ष", replaceWith: "q" },
+    { find: "स", replaceWith: "?" },
+    { find: "ह", replaceWith: "…" },
+
+    //
+    // 2.4) Dependent Vowel Signs / Matras
+    //
+    // Important: “ि” (U+093F) is handled by reorderShortI first,
+    // then we map it. So we map U+093F alone here:
+    { find: "ि", replaceWith: "f" },
+
+    { find: "ा", replaceWith: "f" },
+    { find: "ी", replaceWith: "]" },
+    { find: "ु", replaceWith: "'" },
+    { find: "ू", replaceWith: '"' },
+    { find: "े", replaceWith: "{" },
+    { find: "ै", replaceWith: "{f" },
+    { find: "ो", replaceWith: "l" },
+    { find: "ौ", replaceWith: "o" },
+    { find: "ृ", replaceWith: "}" },
+
+    //
+    // 2.5) Diacritics / Signs
+    //
+    // Chandrabindu / Anusvara / Visarga, etc.
+    { find: "ँ", replaceWith: "=" }, // chandrabindu
+    { find: "ं", replaceWith: "m" }, // anusvara
+    { find: "ः", replaceWith: ":" }, // visarga
+    { find: "ँ", replaceWith: "=" }, // chandrabindu
+    { find: "्", replaceWith: "\\" }, // virama (half letter)
+
+    //
+    // 2.6) Numbers
+    //
+    { find: "०", replaceWith: "0" },
+    { find: "१", replaceWith: "1" },
+    { find: "२", replaceWith: "2" },
+    { find: "३", replaceWith: "3" },
+    { find: "४", replaceWith: "4" },
+    { find: "५", replaceWith: "5" },
+    { find: "६", replaceWith: "6" },
+    { find: "७", replaceWith: "7" },
+    { find: "८", replaceWith: "8" },
+    { find: "९", replaceWith: "9" },
+
+    //
+    // 2.7) Punctuation (partial)
+    //
+    { find: "।", replaceWith: "|" }, // danda
+    { find: "॥", replaceWith: "||" }, // double danda
+]
+
+/**
+ * Because we have multiple possible matches, we want to replace all occurrences.
+ * We'll do a simple pass for each rule in order.
+ * For sequences (like "ज्ञ"), we put them before single-character maps, so that they don't
+ * get partially replaced by the single-character rules for "ज" etc.
+ */
+function applyMapping(str: string): string {
+    let out = str
+    for (const { find, replaceWith } of devToPreetiMap) {
+        // Replace all occurrences
+        out = out.split(find).join(replaceWith)
+    }
+    return out
+}
+
+////////////////////////////////////////
+// 3) MAIN FUNCTION
+////////////////////////////////////////
+
+/**
+ * Convert a Unicode Devanagari string to Preeti ASCII.
+ * Steps:
+ *   1) Reorder the short-i sign (ि) so that it occurs *before* the consonant in the text stream.
+ *   2) Apply dictionary-based replacements for all relevant characters and signs.
+ *
+ * Usage:
+ *   const input = "किरण";
+ *   const output = convertUnicodeToPreeti(input);
+ *   console.log(output);  // => e.g. "sfa..."
+ */
+export function convertUnicodeToPreetiChat(input: string): string {
+    // 1) reorder 'ि' so the final ASCII ends up correct
+    const reordered = reorderShortI(input)
+
+    // 2) do dictionary-based replacements
+    const mapped = applyMapping(reordered)
+
+    return mapped
+}
+
+// ----------------------------------------------------------------
+// Example usage / testing (uncomment if you’re actually running TS):
+// ----------------------------------------------------------------
+// const sample = "किरण";
+// const preeti = convertUnicodeToPreeti(sample);
+// console.log(`"${sample}" in Preeti => "${preeti}"`);
