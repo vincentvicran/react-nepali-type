@@ -1,6 +1,5 @@
 import React, { useCallback, useDeferredValue, useEffect } from "react"
 
-import { convertUnicodeToPreetiChat, mapToAscii as mapToAsciiExp } from "./experiment"
 import { mapToAscii, mapToPreeti, mapToUnicode } from "./helpers"
 
 import type { INepaliTypeProps } from "./Types"
@@ -24,13 +23,6 @@ const NepaliType: React.FunctionComponent<INepaliTypeProps> = ({
 
     const alterAsciiValue = useCallback(() => {
         const unicodeValue = mapToUnicode(deferredAsciiValue, "Preeti")
-
-        const asciiValue2 = mapToAscii(unicodeValue)
-        const asciiValueExp = mapToAsciiExp(unicodeValue)
-
-        const chatGPT = convertUnicodeToPreetiChat(unicodeValue)
-
-        console.log({ deferredAsciiValue, unicodeValue, asciiValue2, chatGPT, asciiValueExp })
 
         onChange?.(deferredAsciiValue, unicodeValue)
     }, [deferredAsciiValue])
